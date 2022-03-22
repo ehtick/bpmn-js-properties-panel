@@ -12,6 +12,7 @@ import {
   createOutputParameter,
   createTaskDefinitionWithType,
   createTaskHeader,
+  ensureExtension,
   shouldUpdate
 } from '../CreateHelper';
 
@@ -50,6 +51,9 @@ export default class ChangeElementTemplateHandler {
 
     // update zeebe:modelerTemplate attribute
     this._updateZeebeModelerTemplate(element, newTemplate);
+
+    // update zeebe:modelerTemplateIcon attribute
+    this._updateZeebeModelerTemplateIcon(element, newTemplate);
 
     if (newTemplate) {
 
@@ -96,6 +100,45 @@ export default class ChangeElementTemplateHandler {
     modeling.updateProperties(element, {
       'zeebe:modelerTemplate': newTemplate && newTemplate.id,
       'zeebe:modelerTemplateVersion': newTemplate && newTemplate.version
+    });
+  }
+
+  _updateZeebeModelerTemplateIcon(element, newTemplate) {
+    const bpmnFactory = this._bpmnFactory,
+          commandStack = this._commandStack;
+
+    const {
+      icon
+    } = newTemplate;
+
+    if (!icon) {
+      return;
+    }
+
+    const {
+      contents
+    } = icon;
+
+    if (!contents) {
+      return;
+    }
+
+    // todo: verify the update case works (do not create multiple)
+    // todo: sanitize svg!
+
+    // ensure extension elements
+    this._getOrCreateExtensionElements(element);
+
+    // create new zeebe:modelerTemplateIcon
+    // todo: move to create helper
+    const modelerTemplateIcon = ensureExtension(element, 'zeebe:ModelerTemplateIcon', bpmnFactory);
+
+    commandStack.execute('element.updateModdleProperties', {
+      element,
+      moddleElement: modelerTemplateIcon,
+      properties: {
+        body: contents
+      }
     });
   }
 

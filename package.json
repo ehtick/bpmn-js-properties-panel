@@ -55,7 +55,8 @@
     "min-dash": "^3.8.1",
     "min-dom": "^3.1.3",
     "preact-markup": "^2.1.1",
-    "semver": "^7.3.5"
+    "semver": "^7.3.5",
+    "tiny-svg": "^2.2.3"
   },
   "devDependencies": {
     "@babel/core": "^7.14.3",
@@ -102,7 +103,7 @@
     "sinon-chai": "^3.7.0",
     "sirv-cli": "^1.0.12",
     "webpack": "^5.38.1",
-    "zeebe-bpmn-moddle": "^0.11.0"
+    "zeebe-bpmn-moddle": "camunda-cloud/zeebe-bpmn-moddle#template-icons-props"
   },
   "peerDependencies": {
     "bpmn-js": "8.x || 9.x",

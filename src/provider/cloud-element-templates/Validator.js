@@ -4,6 +4,8 @@ import {
   getSchemaVersion
 } from '../element-templates/Validator';
 
+import { isValidSVG } from './util/svg';
+
 import semver from 'semver';
 
 import {
@@ -36,6 +38,7 @@ export class Validator extends BaseValidator {
     const id = template.id,
           version = template.version || '_',
           schema = template.$schema,
+          icon = template.icon && template.icon.contents,
           schemaVersion = schema && getSchemaVersion(schema);
 
     // (1) $schema attribute defined
@@ -72,6 +75,12 @@ export class Validator extends BaseValidator {
 
     // (4) JSON schema compliance
     const validationResult = validateAgainstSchema(template);
+
+    // (5) validate svg icons
+    // todo: reconsider me
+    if (icon && !isValidSVG(icon)) {
+      return this._logError('template icon svg is malformed', template);
+    }
 
     const {
       errors,

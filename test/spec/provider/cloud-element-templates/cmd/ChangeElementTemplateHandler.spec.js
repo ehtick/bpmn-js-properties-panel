@@ -120,6 +120,35 @@ describe('cloud-element-templates - ChangeElementTemplateHandler', function() {
     });
 
 
+    describe('update zeebe:modelerTemplateIcon', function() {
+
+      beforeEach(bootstrap(require('./task.bpmn').default));
+
+      const newTemplate = require('./icon-template.json');
+
+
+      it('execute', inject(function(elementRegistry) {
+
+        // given
+        const task = elementRegistry.get('Task_1');
+
+        // when
+        changeTemplate(task, newTemplate);
+
+        // then
+        const icon = findExtension(task, 'zeebe:ModelerTemplateIcon');
+
+        expect(icon).to.exist;
+      }));
+
+
+      it('undo');
+
+
+      it('redo');
+    });
+
+
     describe('update name', function() {
 
       beforeEach(bootstrap(require('./task.bpmn').default));

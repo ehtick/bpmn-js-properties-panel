@@ -445,6 +445,20 @@ describe('provider/cloud-element-templates - Validator', function() {
         expect(valid(templates)).to.be.empty;
       });
 
+
+      it.only('should accept icon', function() {
+
+        // given
+        const templates = new Validator();
+
+        const templateDescriptor = require('./fixtures/icons');
+
+        // when
+        templates.addAll(templateDescriptor);
+
+        console.log(errors(templates));
+      });
+
     });
 
   });

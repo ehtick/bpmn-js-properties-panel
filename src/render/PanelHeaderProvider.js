@@ -13,6 +13,10 @@ import {
   isInterrupting
 } from 'bpmn-js/lib/util/DiUtil';
 
+import Markup from 'preact-markup';
+
+import { useService } from '../hooks';
+
 import iconsByType from '../icons';
 
 export function getConcreteType(element) {
@@ -74,6 +78,25 @@ export const PanelHeaderProvider = {
 
   getElementIcon: (element) => {
     const concreteType = getConcreteType(element);
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const elementTemplates = useService('elementTemplates', false);
+
+    if (!elementTemplates) {
+      return;
+    }
+
+    const modelerTemplateIcon = getTemplateIcon(element);
+
+    // todo: move to own component
+    // todo: style icon to adjust
+    if (modelerTemplateIcon) {
+      return () => <Markup
+        style="transform: scale(1.5); margin-top: auto;"
+        markup={ modelerTemplateIcon.get('body') }
+        trim="false"
+      />;
+    }
 
     return iconsByType[ concreteType ];
   },
@@ -137,12 +160,25 @@ function isConditionalFlow(element) {
   return businessObject.conditionExpression && is(sourceBusinessObject, 'bpmn:Activity');
 }
 
-
-// helpers //////////
 function isPlane(element) {
 
   // Backwards compatibility for bpmn-js<8
   const di = element && (element.di || getBusinessObject(element).di);
 
   return is(di, 'bpmndi:BPMNPlane');
+}
+
+// todo: make elementTemplates agnostic, e.g. get from elementTemplate service via API
+function getTemplateIcon(element) {
+  const businessObject = getBusinessObject(element);
+
+  const extensionElements = businessObject.get('extensionElements');
+
+  if (!extensionElements) {
+    return null;
+  }
+
+  return extensionElements.get('values').find((value) => {
+    return is(value, 'zeebe:ModelerTemplateIcon');
+  });
 }
