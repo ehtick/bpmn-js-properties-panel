@@ -89,13 +89,19 @@ export const PanelHeaderProvider = {
     const modelerTemplateIcon = getTemplateIcon(element);
 
     // todo: move to own component
+    // todo: do not display if no element template applied (same as on canvas)
     // todo: style icon to adjust
     if (modelerTemplateIcon) {
-      return () => <Markup
-        style="transform: scale(1.5); margin-top: auto;"
-        markup={ modelerTemplateIcon.get('body') }
-        trim="false"
-      />;
+
+      // (1) raw svg approach
+      // return () => <Markup
+      //   style="transform: scale(1.5); margin-top: auto;"
+      //   markup={ modelerTemplateIcon.get('body') }
+      //   trim="false"
+      // />;
+
+      // (2) data uri approach
+      return () => <img width="32" height="32" src={ modelerTemplateIcon.get('body') } />;
     }
 
     return iconsByType[ concreteType ];
