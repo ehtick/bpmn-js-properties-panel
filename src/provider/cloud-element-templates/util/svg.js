@@ -1,5 +1,3 @@
-import { create } from 'tiny-svg';
-
 /**
  * DOM parsing utility
  */

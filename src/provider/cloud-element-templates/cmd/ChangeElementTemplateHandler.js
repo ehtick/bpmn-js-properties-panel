@@ -124,20 +124,29 @@ export default class ChangeElementTemplateHandler {
     }
 
     // todo: verify the update case works (do not create multiple)
-    // todo: sanitize svg!
+    // todo: cleanup unused icons!
+    const definitions = getDefinitions(element);
 
     // ensure extension elements
-    this._getOrCreateExtensionElements(element);
+    this._getOrCreateExtensionElements(definitions);
+
+    // ensure zeebe:ModelerTemplateIcons
+    const modelerTemplateIcons = ensureExtension(definitions, 'zeebe:ModelerTemplateIcons', bpmnFactory);
 
     // create new zeebe:modelerTemplateIcon
     // todo: move to create helper
-    const modelerTemplateIcon = ensureExtension(element, 'zeebe:ModelerTemplateIcon', bpmnFactory);
+    // todo: do not create twice
+    const newTemplateIcon = bpmnFactory.create('zeebe:ModelerTemplateIcon', {
+      id: getIconId(newTemplate),
+      body: contents
+    });
+    newTemplateIcon.$parent = modelerTemplateIcons;
 
     commandStack.execute('element.updateModdleProperties', {
       element,
-      moddleElement: modelerTemplateIcon,
+      moddleElement: modelerTemplateIcons,
       properties: {
-        body: contents
+        icons: [ ...modelerTemplateIcons.get('icons'), newTemplateIcon ]
       }
     });
   }
@@ -682,4 +691,27 @@ function remove(array, item) {
   array.splice(index, 1);
 
   return array;
+}
+
+// todo: move to helper
+function getDefinitions(element) {
+  let businessObject = getBusinessObject(element);
+
+  while (businessObject && !is(businessObject, 'bpmn:Definitions')) {
+    businessObject = businessObject.$parent;
+  }
+
+  return businessObject;
+}
+
+function getIconId(template) {
+  const templateId = template.id;
+  const templateVersion = template.version;
+
+  let iconId = 'Icon_' + templateId;
+  if (templateVersion) {
+    iconId = iconId + '-' + templateVersion;
+  }
+
+  return iconId;
 }

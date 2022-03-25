@@ -3,9 +3,15 @@ import {
 } from 'bpmn-js/lib/features/label-editing/LabelUtil';
 
 import {
+  isLabel
+} from 'bpmn-js/lib/util/LabelUtil';
+
+import {
   is,
   getBusinessObject
 } from 'bpmn-js/lib/util/ModelUtil';
+
+import { find } from 'min-dash';
 
 import {
   isExpanded,
@@ -13,7 +19,7 @@ import {
   isInterrupting
 } from 'bpmn-js/lib/util/DiUtil';
 
-import Markup from 'preact-markup';
+import { findExtension } from '../provider/cloud-element-templates/Helper';
 
 import { useService } from '../hooks';
 
@@ -175,16 +181,50 @@ function isPlane(element) {
 }
 
 // todo: make elementTemplates agnostic, e.g. get from elementTemplate service via API
-function getTemplateIcon(element) {
-  const businessObject = getBusinessObject(element);
+function getElementTemplate(element) {
+  return !isLabel(element) && is(element, 'bpmn:Activity') && getBusinessObject(element).get('zeebe:modelerTemplate');
+}
 
-  const extensionElements = businessObject.get('extensionElements');
+function getElementTemplateVersion(element) {
+  return !isLabel(element) && is(element, 'bpmn:Activity') && getBusinessObject(element).get('zeebe:modelerTemplateVersion');
+}
 
-  if (!extensionElements) {
-    return null;
+function getDefinitions(element) {
+  let businessObject = getBusinessObject(element);
+
+  while (businessObject && !is(businessObject, 'bpmn:Definitions')) {
+    businessObject = businessObject.$parent;
   }
 
-  return extensionElements.get('values').find((value) => {
-    return is(value, 'zeebe:ModelerTemplateIcon');
+  return businessObject;
+}
+
+// todo: make elementTemplates agnostic, e.g. get from elementTemplate service via API
+function getModelerTemplateIcons(element) {
+  const icons = findExtension(element, 'zeebe:ModelerTemplateIcons');
+  return icons && icons.get('icons');
+}
+
+function getIconId(element) {
+  const templateId = getElementTemplate(element);
+  const templateVersion = getElementTemplateVersion(element);
+
+  let iconId = 'Icon_' + templateId;
+  if (templateVersion) {
+    iconId = iconId + '-' + templateVersion;
+  }
+
+  return iconId;
+}
+
+function getTemplateIcon(element) {
+  const definitions = getDefinitions(element);
+
+  const icons = getModelerTemplateIcons(definitions);
+
+  const iconId = getIconId(element);
+
+  return find(icons, function(icon) {
+    return icon.get('id') === iconId;
   });
 }
