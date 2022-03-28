@@ -26,8 +26,9 @@ import {
  * `zeebe:modelerTemplateVersion`.
  */
 export default class ChangeElementTemplateHandler {
-  constructor(bpmnFactory, commandStack, modeling) {
+  constructor(bpmnFactory, bpmnReplace, commandStack, modeling) {
     this._bpmnFactory = bpmnFactory;
+    this._bpmnReplace = bpmnReplace;
     this._commandStack = commandStack;
     this._modeling = modeling;
   }
@@ -44,14 +45,18 @@ export default class ChangeElementTemplateHandler {
    * @param {Object} [context.newTemplate]
    */
   preExecute(context) {
-    const element = context.element,
-          newTemplate = context.newTemplate,
+    const newTemplate = context.newTemplate,
           oldTemplate = context.oldTemplate;
+
+    let element = context.element;
 
     // update zeebe:modelerTemplate attribute
     this._updateZeebeModelerTemplate(element, newTemplate);
 
     if (newTemplate) {
+
+      // update task type
+      element = context.element = this._updateTaskType(element, newTemplate);
 
       // update properties
       this._updateProperties(element, oldTemplate, newTemplate);
@@ -452,12 +457,36 @@ export default class ChangeElementTemplateHandler {
       });
     }
   }
+
+  /**
+   * Replaces the element with the specified elementType
+   *
+   * @param {djs.model.Base} element
+   * @param {Object} newTemplate
+   */
+  _updateTaskType(element, newTemplate) {
+
+    // determine new task type
+    const newType = newTemplate.elementType;
+
+    if (!newType) {
+      return element;
+    }
+
+    // don't replace Task that is already the correct type
+    if (is(element, newType.value)) {
+      return element;
+    }
+
+    return this._bpmnReplace.replaceElement(element, { type: newType.value });
+  }
 }
 
 ChangeElementTemplateHandler.$inject = [
   'bpmnFactory',
+  'bpmnReplace',
   'commandStack',
-  'modeling'
+  'modeling',
 ];
 
 
