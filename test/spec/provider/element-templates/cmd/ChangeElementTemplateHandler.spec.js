@@ -56,11 +56,12 @@ describe('element-templates - ChangeElementTemplateHandler', function() {
     container = TestContainer.get(this);
   });
 
-  function bootstrap(diagramXML) {
+  function bootstrap(diagramXML, elementTemplates) {
     return bootstrapModeler(diagramXML, {
       container,
       modules,
-      moddleExtensions
+      moddleExtensions,
+      elementTemplates
     });
   }
 
@@ -1236,6 +1237,69 @@ describe('element-templates - ChangeElementTemplateHandler', function() {
         }));
 
       });
+
+    });
+
+
+    describe('update task type', function() {
+
+      const newTemplate = require('./task-template-elementType.json');
+
+      beforeEach(bootstrap(require('./task.bpmn').default, [ newTemplate ]));
+
+      it('execute', inject(function(elementRegistry) {
+
+        // given
+        const task = elementRegistry.get('Task_1');
+
+        // assume
+
+        // when
+        changeTemplate(task, newTemplate);
+
+        // then
+        const replacedTask = elementRegistry.get('Task_1');
+        console.log(replacedTask);
+        expectElementTemplate(replacedTask, 'element-type-template', 1);
+
+        expect(is(replacedTask, 'bpmn:UserTask')).to.be.true;
+      }));
+
+
+      it('undo', inject(function(commandStack, elementRegistry) {
+
+        // given
+        const task = elementRegistry.get('Task_1');
+
+        changeTemplate(task, newTemplate);
+
+        // when
+        commandStack.undo();
+
+        // then
+        expectNoElementTemplate(task);
+
+        expect(is(task, 'bpmn:Task')).to.be.true;
+      }));
+
+
+      it('redo', inject(function(commandStack, elementRegistry) {
+
+        // given
+        const task = elementRegistry.get('Task_1');
+
+        changeTemplate(task, newTemplate);
+
+        // when
+        commandStack.undo();
+        commandStack.redo();
+
+        // then
+        const replacedTask = elementRegistry.get('Task_1');
+        expectElementTemplate(replacedTask, 'element-type-template', 1);
+
+        expect(is(replacedTask, 'bpmn:UserTask')).to.be.true;
+      }));
 
     });
 

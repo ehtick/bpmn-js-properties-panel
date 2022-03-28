@@ -1,0 +1,13 @@
+{
+  "name": "Element Type Template v1",
+  "version": 1,
+  "id": "element-type-template",
+  "appliesTo": [
+    "bpmn:ServiceTask",
+    "bpmn:UserTask"
+  ],
+  "elementType": {
+    "value": "bpmn:UserTask"
+  },
+  "properties": [ ]
+}
