@@ -5,8 +5,11 @@
     "id": "io.camunda.connectors.RestConnector-s1",
     "description": "A generic REST service.",
     "appliesTo": [
-      "bpmn:ServiceTask"
+      "bpmn:Task"
     ],
+    "elementType": {
+      "value": "bpmn:ServiceTask"
+    },
     "properties": [
       {
         "type": "Hidden",
