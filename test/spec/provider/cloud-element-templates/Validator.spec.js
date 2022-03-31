@@ -468,7 +468,7 @@ describe('provider/cloud-element-templates - Validator', function() {
         // given
         const templates = new Validator();
 
-        const templateDescriptor = require('./fixtures/elementType-invalid-morps');
+        const templateDescriptor = require('./fixtures/elementType-invalid-morphs');
 
         // when
         templates.addAll(templateDescriptor);
