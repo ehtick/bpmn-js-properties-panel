@@ -19,6 +19,8 @@ import {
 
 import Modeler from 'bpmn-js/lib/Modeler';
 
+import ElementTemplateChooserModule from '@bpmn-io/element-template-chooser';
+
 import BpmnPropertiesPanel from 'src/render';
 
 import BpmnPropertiesProvider from 'src/provider/bpmn';
@@ -201,7 +203,8 @@ describe('<BpmnPropertiesPanelRenderer>', function() {
           CamundaModdleExtension,
           BpmnPropertiesPanel,
           BpmnPropertiesProvider,
-          ElementTemplatesPropertiesProvider
+          ElementTemplatesPropertiesProvider,
+          ElementTemplateChooserModule
         ],
         moddleExtensions: {
           camunda: CamundaModdle
@@ -230,7 +233,8 @@ describe('<BpmnPropertiesPanelRenderer>', function() {
           ZeebeModdleExtension,
           BpmnPropertiesPanel,
           BpmnPropertiesProvider,
-          CloudElementTemplatesPropertiesProvider
+          CloudElementTemplatesPropertiesProvider,
+          ElementTemplateChooserModule
         ],
         moddleExtensions: {
           zeebe: ZeebeModdle
