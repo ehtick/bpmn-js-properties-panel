@@ -643,7 +643,7 @@ describe('cloud-element-templates - ChangeElementTemplateHandler', function() {
 
     describe('update task type', function() {
 
-      const newTemplate = require('./task-template-elementType.json');
+      const newTemplate = require('./task-template-elementType-1.json');
 
       beforeEach(bootstrap(require('./task.bpmn').default, [ newTemplate ]));
 
@@ -1904,6 +1904,65 @@ describe('cloud-element-templates - ChangeElementTemplateHandler', function() {
             value: 'header-4-new-value'
           },
         ]);
+      }));
+
+    });
+
+    describe('update task type', function() {
+
+      const oldTemplate = require('./task-template-elementType-1.json');
+      const newTemplate = require('./task-template-elementType-2.json');
+
+      beforeEach(bootstrap(require('./task.bpmn').default, [ oldTemplate, newTemplate ]));
+
+      it('execute', inject(function(elementRegistry) {
+
+        // given
+        changeTemplate('Task_1', oldTemplate);
+
+        // when
+        changeTemplate('Task_1', newTemplate);
+
+        // then
+        const replacedTask = elementRegistry.get('Task_1');
+        expectElementTemplate(replacedTask, 'element-type-template-new', 1);
+
+        expect(is(replacedTask, 'bpmn:ServiceTask')).to.be.true;
+      }));
+
+
+      it('undo', inject(function(commandStack, elementRegistry) {
+
+        // given
+        changeTemplate('Task_1', oldTemplate);
+
+        // when
+        changeTemplate('Task_1', newTemplate);
+        commandStack.undo();
+
+        // then
+        const task = elementRegistry.get('Task_1');
+        expectElementTemplate(task, 'element-type-template', 1);
+
+        expect(is(task, 'bpmn:UserTask')).to.be.true;
+      }));
+
+
+      it('redo', inject(function(commandStack, elementRegistry) {
+
+        // given
+        changeTemplate('Task_1', oldTemplate);
+
+        // when
+        changeTemplate('Task_1', newTemplate);
+        commandStack.undo();
+        commandStack.redo();
+
+        // then
+        const task = elementRegistry.get('Task_1');
+        expectElementTemplate(task, 'element-type-template-new', 1);
+
+        expect(is(task, 'bpmn:ServiceTask')).to.be.true;
       }));
 
     });

@@ -3,8 +3,7 @@
   "version": 1,
   "id": "element-type-template",
   "appliesTo": [
-    "bpmn:ServiceTask",
-    "bpmn:UserTask"
+    "bpmn:Task"
   ],
   "elementType": {
     "value": "bpmn:UserTask"
