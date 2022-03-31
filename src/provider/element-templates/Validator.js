@@ -104,22 +104,10 @@ export class Validator {
     }
 
     // (3) elementType validation
-    if (template.elementType && template.appliesTo) {
+    var elementTypeError = this._validateElementType(template);
 
-      const elementType = template.elementType.value,
-            appliesTo = template.appliesTo;
-
-      // (3.1) template can be applied to elementType
-      if (!appliesTo.find(type => isType(elementType, type))) {
-        return this._logError(`template does not apply to requested element type <${ elementType }>`, template);
-      }
-
-      // (3.2) template only applies to same type of element
-      for (const sourceType of appliesTo) {
-        if (!canMorph(elementType, sourceType)) {
-          return this._logError(`can not morph <${sourceType}> into <${elementType}>`, template);
-        }
-      }
+    if (elementTypeError) {
+      return elementTypeError;
     }
 
     // (4) JSON schema compliance
@@ -139,6 +127,33 @@ export class Validator {
     }
 
     return err;
+  }
+
+  /**
+   * Validate elementType for given template and return error (if any).
+   *
+   * @param {TemplateDescriptor} template
+   *
+   * @return {Error} validation error, if any
+   */
+  _validateElementType(template) {
+    if (template.elementType && template.appliesTo) {
+
+      const elementType = template.elementType.value,
+            appliesTo = template.appliesTo;
+
+      // (3.1) template can be applied to elementType
+      if (!appliesTo.find(type => isType(elementType, type))) {
+        return this._logError(`template does not apply to requested element type <${ elementType }>`, template);
+      }
+
+      // (3.2) template only applies to same type of element
+      for (const sourceType of appliesTo) {
+        if (!canMorph(sourceType, elementType)) {
+          return this._logError(`can not morph <${sourceType}> into <${elementType}>`, template);
+        }
+      }
+    }
   }
 
   /**

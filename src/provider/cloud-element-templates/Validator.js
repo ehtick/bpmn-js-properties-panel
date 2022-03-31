@@ -6,8 +6,6 @@ import {
 
 import semverCompare from 'semver-compare';
 
-import BpmnModdle from 'bpmn-moddle';
-
 import {
   validateZeebe as validateAgainstSchema,
   getZeebeSchemaPackage as getTemplateSchemaPackage,
@@ -73,22 +71,10 @@ export class Validator extends BaseValidator {
     }
 
     // (4) elementType validation
-    if (template.elementType && template.appliesTo) {
+    var elementTypeError = this._validateElementType(template);
 
-      const elementType = template.elementType.value,
-            appliesTo = template.appliesTo;
-
-      // (3.1) template can be applied to elementType
-      if (!appliesTo.find(type => isType(elementType, type))) {
-        return this._logError(`template does not apply to requested element type <${ elementType }>`, template);
-      }
-
-      // (3.2) template only applies to same type of element
-      for (const sourceType of appliesTo) {
-        if (!canMorph(elementType, sourceType)) {
-          return this._logError(`can not morph <${sourceType}> into <${elementType}>`, template);
-        }
-      }
+    if (elementTypeError) {
+      return elementTypeError;
     }
 
     // (5) JSON schema compliance
@@ -113,45 +99,4 @@ export class Validator extends BaseValidator {
   isSchemaValid(schema) {
     return schema && schema.includes(SUPPORTED_SCHEMA_PACKAGE);
   }
-}
-
-// helpers ///////////////////////
-
-const moddle = new BpmnModdle();
-const MORPHABLE_TYPES = [ 'bpmn:Task', 'bpmn:Event', 'bpmn:Gateway' ];
-
-/**
- * Check if given type is a subtype of given base type.
- *
- * @param {String} type
- * @param {String} baseType
- * @returns {Boolean}
- */
-function isType(type, baseType) {
-  const sourceInstance = moddle.create(type);
-
-  return sourceInstance.$instanceOf(baseType);
-}
-
-
-/**
- * Checks if a given type can be morphed into another type.
- *
- * @param {String} sourceType
- * @param {String} targetType
- * @returns {Boolean}
- */
-function canMorph(sourceType, targetType) {
-
-  if (sourceType === targetType) {
-    return true;
-  }
-
-  const baseType = MORPHABLE_TYPES.find(type => isType(sourceType, type));
-
-  if (!baseType) {
-    return false;
-  }
-
-  return isType(targetType, baseType);
 }
