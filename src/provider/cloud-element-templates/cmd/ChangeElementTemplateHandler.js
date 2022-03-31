@@ -474,7 +474,7 @@ export default class ChangeElementTemplateHandler {
     }
 
     // don't replace Task that is already the correct type
-    if (is(element, newType.value)) {
+    if (element.$type === newType.value) {
       return element;
     }
 
@@ -486,7 +486,7 @@ ChangeElementTemplateHandler.$inject = [
   'bpmnFactory',
   'bpmnReplace',
   'commandStack',
-  'modeling',
+  'modeling'
 ];
 
 
