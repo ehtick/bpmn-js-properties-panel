@@ -56,12 +56,11 @@ describe('cloud-element-templates - ChangeElementTemplateHandler', function() {
     container = TestContainer.get(this);
   });
 
-  function bootstrap(diagramXML, elementTemplates) {
+  function bootstrap(diagramXML) {
     return bootstrapModeler(diagramXML, {
       container,
       modules,
-      moddleExtensions,
-      elementTemplates
+      moddleExtensions
     });
   }
 
@@ -645,31 +644,29 @@ describe('cloud-element-templates - ChangeElementTemplateHandler', function() {
 
       const newTemplate = require('./task-template-elementType-1.json');
 
-      beforeEach(bootstrap(require('./task.bpmn').default, [ newTemplate ]));
+      beforeEach(bootstrap(require('./task.bpmn').default));
 
       it('execute', inject(function(elementRegistry) {
 
         // given
-        const task = elementRegistry.get('Task_1');
+        let task = elementRegistry.get('Task_1');
 
         // assume
         expect(is(task, 'bpmn:ServiceTask')).to.be.true;
 
         // when
-        changeTemplate(task, newTemplate);
+        task = changeTemplate(task, newTemplate);
 
         // then
-        const replacedTask = elementRegistry.get('Task_1');
-        expectElementTemplate(replacedTask, 'element-type-template', 1);
-
-        expect(is(replacedTask, 'bpmn:UserTask')).to.be.true;
+        expectElementTemplate(task, 'element-type-template', 1);
+        expect(is(task, 'bpmn:UserTask')).to.be.true;
       }));
 
 
       it('undo', inject(function(commandStack, elementRegistry) {
 
         // given
-        const task = elementRegistry.get('Task_1');
+        let task = elementRegistry.get('Task_1');
 
         changeTemplate(task, newTemplate);
 
@@ -677,8 +674,10 @@ describe('cloud-element-templates - ChangeElementTemplateHandler', function() {
         commandStack.undo();
 
         // then
-        expectNoElementTemplate(task);
+        const currentTask = elementRegistry.get('Task_1');
 
+        expect(currentTask).to.eql(task);
+        expectNoElementTemplate(task);
         expect(is(task, 'bpmn:ServiceTask')).to.be.true;
       }));
 
@@ -686,19 +685,20 @@ describe('cloud-element-templates - ChangeElementTemplateHandler', function() {
       it('redo', inject(function(commandStack, elementRegistry) {
 
         // given
-        const task = elementRegistry.get('Task_1');
+        let task = elementRegistry.get('Task_1');
 
-        changeTemplate(task, newTemplate);
+        task = changeTemplate('Task_1', newTemplate);
 
         // when
         commandStack.undo();
         commandStack.redo();
 
         // then
-        const replacedTask = elementRegistry.get('Task_1');
-        expectElementTemplate(replacedTask, 'element-type-template', 1);
+        const currentTask = elementRegistry.get('Task_1');
 
-        expect(is(replacedTask, 'bpmn:UserTask')).to.be.true;
+        expect(currentTask).to.equal(task);
+        expectElementTemplate(currentTask, 'element-type-template', 1);
+        expect(is(currentTask, 'bpmn:UserTask')).to.be.true;
       }));
 
     });
@@ -1918,51 +1918,54 @@ describe('cloud-element-templates - ChangeElementTemplateHandler', function() {
       it('execute', inject(function(elementRegistry) {
 
         // given
-        changeTemplate('Task_1', oldTemplate);
+        let task = elementRegistry.get('Task_1');
+        task = changeTemplate(task, oldTemplate);
 
         // when
-        changeTemplate('Task_1', newTemplate);
+        task = changeTemplate(task, newTemplate);
 
         // then
-        const replacedTask = elementRegistry.get('Task_1');
-        expectElementTemplate(replacedTask, 'element-type-template-new', 1);
-
-        expect(is(replacedTask, 'bpmn:ServiceTask')).to.be.true;
+        expectElementTemplate(task, 'element-type-template-new', 1);
+        expect(is(task, 'bpmn:ServiceTask')).to.be.true;
       }));
 
 
       it('undo', inject(function(commandStack, elementRegistry) {
 
         // given
-        changeTemplate('Task_1', oldTemplate);
+        let task = elementRegistry.get('Task_1');
+        task = changeTemplate(task, oldTemplate);
 
         // when
         changeTemplate('Task_1', newTemplate);
         commandStack.undo();
 
         // then
-        const task = elementRegistry.get('Task_1');
-        expectElementTemplate(task, 'element-type-template', 1);
+        const currentTask = elementRegistry.get('Task_1');
 
-        expect(is(task, 'bpmn:UserTask')).to.be.true;
+        expect(currentTask).to.eql(task);
+        expectElementTemplate(currentTask, 'element-type-template', 1);
+        expect(is(currentTask, 'bpmn:UserTask')).to.be.true;
       }));
 
 
       it('redo', inject(function(commandStack, elementRegistry) {
 
         // given
-        changeTemplate('Task_1', oldTemplate);
+        let task = elementRegistry.get('Task_1');
+        task = changeTemplate(task, oldTemplate);
 
         // when
-        changeTemplate('Task_1', newTemplate);
+        task = changeTemplate('Task_1', newTemplate);
         commandStack.undo();
         commandStack.redo();
 
         // then
-        const task = elementRegistry.get('Task_1');
-        expectElementTemplate(task, 'element-type-template-new', 1);
+        const currentTask = elementRegistry.get('Task_1');
 
-        expect(is(task, 'bpmn:ServiceTask')).to.be.true;
+        expect(currentTask).to.eql(task);
+        expectElementTemplate(currentTask, 'element-type-template-new', 1);
+        expect(is(currentTask, 'bpmn:ServiceTask')).to.be.true;
       }));
 
     });
@@ -2039,18 +2042,21 @@ describe('cloud-element-templates - ChangeElementTemplateHandler', function() {
 // helpers //////////
 
 function changeTemplate(element, newTemplate, oldTemplate) {
-  return getBpmnJS().invoke(function(commandStack, elementRegistry) {
+  const templates = [];
+
+  newTemplate && templates.push(newTemplate);
+  oldTemplate && templates.push(oldTemplate);
+
+  return getBpmnJS().invoke(function(elementTemplates, elementRegistry) {
     if (isString(element)) {
       element = elementRegistry.get(element);
     }
 
     expect(element).to.exist;
 
-    return commandStack.execute('propertiesPanel.zeebe.changeTemplate', {
-      element: element,
-      newTemplate: newTemplate,
-      oldTemplate: oldTemplate
-    });
+    elementTemplates.set(templates);
+
+    return elementTemplates.applyTemplate(element, newTemplate);
   });
 }
 
@@ -2091,12 +2097,15 @@ function expectNoElementTemplate(element) {
   });
 }
 
+let runningId = 0;
+
 function createTemplate(properties, scope) {
   if (!isArray(properties)) {
     properties = [ properties ];
   }
 
   const template = {
+    id: '' + runningId++,
     properties: [],
     scopes: []
   };
